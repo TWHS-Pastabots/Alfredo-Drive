@@ -2,15 +2,15 @@ package frc.robot;
 
 public class Ports {
 
-    public static final int LEFT_SPEED_FRONT = 1;
-    public static final int LEFT_SPEED_BACK = 2;
-    public static final int RIGHT_SPEED_FRONT = 3;
-    public static final int RIGHT_SPEED_BACK = 4;
+    //speed sparkmaxes
+    public static final int leftSpeed1 = 1;
+    public static final int leftSpeed2 = 2;
+    public static final int rightSpeed1 = 3;
+    public static final int rightSpeed2 = 4;
 
-    public static final int LEFT_ANGLE_FRONT = 5;
-    public static final int LEFT_ANGLE_BACK = 6;
-    public static final int RIGHT_ANGLE_FRONT = 7;
-    public static final int RIGHT_ANGLE_BACK = 8;
-
-    public static final int GYRO = 9;
+    //angle sparkmaxes
+    public static final int leftAngle1 = 5;
+    public static final int leftAngle2 = 6;
+    public static final int rightAngle1 = 7;
+    public static final int rightAngle2 = 8;
 }
