@@ -12,7 +12,6 @@ public class Robot extends TimedRobot {
 
   private static PS4Controller driver;
 
-
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
@@ -32,6 +31,16 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
+
+    double xSpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_X);
+    double ySpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_Y);
+
+    double slant = Math.sqrt(Math.pow(driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), 2) +
+        Math.pow(driver.getRawAxis(Controller.PS_AXIS_RIGHT_Y), 2));
+
+    double rot = slant;
+
+    drivebase.drive(xSpeed, ySpeed, rot, true, true);
   }
 
   @Override
@@ -62,9 +71,9 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
 
-    drivebase.drive(driver.getRawAxis(Controller.PS_AXIS_LEFT_X), driver.getRawAxis(Controller.PS_AXIS_LEFT_Y), 
-    driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), true,false);
-    
+    drivebase.drive(driver.getRawAxis(Controller.PS_AXIS_LEFT_X), driver.getRawAxis(Controller.PS_AXIS_LEFT_Y),
+        driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), true, false);
+
   }
 
   @Override
