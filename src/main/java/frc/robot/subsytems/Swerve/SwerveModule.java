@@ -1,29 +1,16 @@
 package frc.robot.subsytems.Swerve;
 
-import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxAbsoluteEncoder;
-import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
-
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.util.WPIUtilJNI;
-import edu.wpi.first.wpilibj.ADIS16470_IMU;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.I2C.Port;
-import frc.robot.Ports;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
+import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.RelativeEncoder;
 
 public class SwerveModule {
     
@@ -33,13 +20,12 @@ public class SwerveModule {
     private static RelativeEncoder distanceEncoder;
     private static AbsoluteEncoder angleEncoder;
 
-    private static PIDController drivePIDController;
-    private static PIDController turnPIDController;
-    private static SparkMaxPIDController testPIDController;
+    private static SparkMaxPIDController drivePIDController;
+    private static SparkMaxPIDController turnPIDController;
 
-    private static int chassisAngularOffSet = 0;
+    private int chassisAngularOffSet = 0;
 
-    private static SwerveModuleState desiredState = new SwerveModuleState(0, new Rotation2d());
+    private SwerveModuleState setState = new SwerveModuleState(0, new Rotation2d());
 
     public SwerveModule(int speedSparkID, int angleSparkID, int chassisAngularOffSet) {
 
@@ -68,17 +54,26 @@ public class SwerveModule {
         angleEncoder.setPositionConversionFactor(Constants.toRadians);
         angleEncoder.setVelocityConversionFactor(Constants.toRadians / 60);
 
-        drivePIDController = new PIDController(0, 0, 0);
-        drivePIDController.setSetpoint(0);
+        drivePIDController = driveSparkMAX.getPIDController();
+        drivePIDController.setFeedbackDevice(distanceEncoder);
 
-        turnPIDController = new PIDController(0, 0, 0);
-        turnPIDController.setSetpoint(0);
-        turnPIDController.enableContinuousInput(0, Constants.toRadians);
+        turnPIDController = driveSparkMAX.getPIDController();
+        turnPIDController.setFeedbackDevice(angleEncoder);
+        turnPIDController.setPositionPIDWrappingEnabled(true);
+        turnPIDController.setPositionPIDWrappingMinInput(0);
+        turnPIDController.setPositionPIDWrappingMaxInput(Constants.toRadians);
 
-        testPIDController = driveSparkMAX.getPIDController();
+        //PID values
+        turnPIDController.setP(0);
+        turnPIDController.setI(0);
+        turnPIDController.setD(0);
+
+        drivePIDController.setP(0);
+        drivePIDController.setI(0);
+        drivePIDController.setD(0);
 
         this.chassisAngularOffSet = chassisAngularOffSet;
-        desiredState.angle = new Rotation2d(angleEncoder.getPosition());
+        setState.angle = new Rotation2d(angleEncoder.getPosition());
         distanceEncoder.setPosition(0);
 
     }
@@ -89,17 +84,15 @@ public class SwerveModule {
         }
 
         public void setDesiredState(SwerveModuleState desiredState){
-            SwerveModuleState correctedDesiredState = new SwerveModuleState();
-            correctedDesiredState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
-            correctedDesiredState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffSet));
+            setState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
+            setState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffSet));
 
-            SwerveModuleState optimizedDesiredState = SwerveModuleState.optimize(correctedDesiredState, new Rotation2d(angleEncoder.getPosition()));
+            setState = SwerveModuleState.optimize(setState, new Rotation2d(angleEncoder.getPosition()));
 
-            testPIDController.setReference(chassisAngularOffSet, null);
-            distanceEncoder.calculate(optimizedDesiredState.speedMetersPerSecond);
-            turnPIDController.calculate(optimizedDesiredState.angle.getRadians());
+            drivePIDController.setReference(setState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
+            turnPIDController.setReference(setState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
 
-            this.desiredState = desiredState;
+            setState = desiredState;
         }
 
         public void resetDistanceEncoder(){

@@ -66,20 +66,14 @@ public class Drivebase extends SubsystemBase {
             backRight.getPosition() });
   }
 
-  /**
-   * Returns the currently-estimated pose of the robot.
-   *
-   * @return The pose.
-   */
+ 
+  //Returns the currently-estimated pose of the robot
   public Pose2d getPose() {
     return odometry.getPoseMeters();
   }
 
-  /**
-   * Resets the odometry to the specified pose.
-   *
-   * @param pose The pose to which to set the odometry.
-   */
+  
+  //Resets the odometry to the specified pose
   public void resetOdometry(Pose2d pose) {
     odometry.resetPosition(
         Rotation2d.fromDegrees(gyro.getAngle()),
@@ -88,16 +82,6 @@ public class Drivebase extends SubsystemBase {
         pose);
   }
 
-  /**
-   * Method to drive the robot using joystick info.
-   *
-   * @param xSpeed        Speed of the robot in the x direction (forward).
-   * @param ySpeed        Speed of the robot in the y direction (sideways).
-   * @param rot           Angular rate of the robot.
-   * @param fieldRelative Whether the provided x and y speeds are relative to the
-   *                      field.
-   * @param rateLimit     Whether to enable rate limiting for smoother control.
-   */
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean rateLimit) {
 
     double xSpeedCommanded;
@@ -114,8 +98,7 @@ public class Drivebase extends SubsystemBase {
       if (m_currentTranslationMag != 0.0) {
         directionSlewRate = Math.abs(Constants.kDirectionSlewRate / m_currentTranslationMag);
       } else {
-        directionSlewRate = 499.2581725863574872769657365370; // some high number that means the slew rate is
-                                                              // effectively instantaneous
+        directionSlewRate = 499.2581725863574872769657365370;
       }
 
       double currentTime = WPIUtilJNI.now() * 1e-6;
@@ -168,9 +151,7 @@ public class Drivebase extends SubsystemBase {
     backRight.setDesiredState(swerveModuleStates[3]);
   }
 
-  /**
-   * Sets the wheels into an X formation to prevent movement.
-   */
+ 
   public void lockWheels() {
     frontLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
     backLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
@@ -201,20 +182,14 @@ public class Drivebase extends SubsystemBase {
     gyro.reset();
   }
 
-  /**
-   * Returns the heading of the robot.
-   *
-   * @return the robot's heading in degrees, from -180 to 180
-   */
+  
+  //Returns the heading of the robot(=180 to 180)
   public double getHeading() {
     return Rotation2d.fromDegrees(gyro.getAngle()).getDegrees();
   }
 
-  /**
-   * Returns the turn rate of the robot.
-   *
-   * @return The turn rate of the robot, in degrees per second
-   */
+  
+  //Returns the turn rate of the robot
   public double getTurnRate() {
     return gyro.getRate() * (Constants.kGyroReversed ? -1.0 : 1.0);
   }
