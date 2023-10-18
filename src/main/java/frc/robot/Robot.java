@@ -35,10 +35,7 @@ public class Robot extends TimedRobot {
     double xSpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_X);
     double ySpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_Y);
 
-    double slant = Math.sqrt(Math.pow(driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), 2) +
-        Math.pow(driver.getRawAxis(Controller.PS_AXIS_RIGHT_Y), 2));
-
-    double rot = slant;
+    double rot = driver.getRawAxis(Controller.PS_AXIS_RIGHT_X);
 
     drivebase.drive(xSpeed, ySpeed, rot, true, true);
   }
