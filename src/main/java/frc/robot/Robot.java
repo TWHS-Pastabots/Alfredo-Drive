@@ -12,6 +12,8 @@ public class Robot extends TimedRobot {
 
   private static PS4Controller driver;
 
+  private static boolean slewRate = false;
+
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
@@ -68,8 +70,16 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
 
+    if (driver.getRawButton(Controller.PS_CIRCLE)) {
+      slewRate = !slewRate;
+    }
+
+    if (driver.getRawButton(Controller.PS_CROSS)) {
+      drivebase.lockWheels();
+    }
+
     drivebase.drive(driver.getRawAxis(Controller.PS_AXIS_LEFT_X), driver.getRawAxis(Controller.PS_AXIS_LEFT_Y),
-        driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), true, false);
+        driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), true, slewRate);
 
   }
 

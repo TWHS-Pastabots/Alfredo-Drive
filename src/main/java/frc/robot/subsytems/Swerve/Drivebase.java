@@ -12,6 +12,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Ports;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -60,6 +61,8 @@ public class Drivebase extends SubsystemBase {
 
   @Override
   public void periodic() {
+    for (SwerveModule module : )
+    SmartDashboard.putNumber(getName(), currentDirection)
     // Update the odometry in the periodic block
     odometry.update(Rotation2d.fromDegrees(gyro.getAngle()),
         new SwerveModulePosition[] { frontLeft.getPosition(), backLeft.getPosition(), frontRight.getPosition(),
@@ -82,15 +85,15 @@ public class Drivebase extends SubsystemBase {
         pose);
   }
 
-  public void drive(double horizontal, double vertical, double rot, boolean fieldRelative, boolean rateLimit) {
+  public void drive(double forward, double side, double rot, boolean fieldRelative, boolean rateLimit) {
 
     double xSpeedCommanded;
     double ySpeedCommanded;
 
     if (rateLimit) {
       // Convert cartesian to polar for rate limiting
-      double direction = Math.atan2(vertical, horizontal);
-      double speed = Math.sqrt(Math.pow(horizontal, 2) + Math.pow(vertical, 2));
+      double direction = Math.atan2(side, forward);
+      double speed = Math.sqrt(Math.pow(forward, 2) + Math.pow(side, 2));
 
       // Calculate the direction slew rate based on an estimate of the lateral
       // acceleration
@@ -129,8 +132,8 @@ public class Drivebase extends SubsystemBase {
       currentRotation = rotLimiter.calculate(rot);
 
     } else {
-      xSpeedCommanded = horizontal;
-      ySpeedCommanded = vertical;
+      xSpeedCommanded = forward;
+      ySpeedCommanded = side;
       currentRotation = rot;
     }
 
