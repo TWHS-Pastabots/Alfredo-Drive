@@ -13,7 +13,7 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 
 public class SwerveModule {
-    
+
     private static CANSparkMax driveSparkMAX;
     private static CANSparkMax turnSparkMAX;
 
@@ -33,24 +33,23 @@ public class SwerveModule {
 
         driveSparkMAX.setInverted(false);
         driveSparkMAX.setIdleMode(IdleMode.kBrake);
-        driveSparkMAX.setSmartCurrentLimit(10);
+        driveSparkMAX.setSmartCurrentLimit(15);
         driveSparkMAX.setOpenLoopRampRate(0.2);
         driveSparkMAX.burnFlash();
 
-        turnSparkMAX = new CANSparkMax(angleSparkID,  MotorType.kBrushless);
+        turnSparkMAX = new CANSparkMax(angleSparkID, MotorType.kBrushless);
         turnSparkMAX.setIdleMode(IdleMode.kBrake);
-        turnSparkMAX.setSmartCurrentLimit(10);
+        turnSparkMAX.setSmartCurrentLimit(15);
         turnSparkMAX.burnFlash();
 
         distanceEncoder = driveSparkMAX.getEncoder();
-        //convert to meters for positon and meters/second for velocity
+        // convert to meters for positon and meters/second for velocity
         distanceEncoder.setPositionConversionFactor(Constants.toMeters);
         distanceEncoder.setVelocityConversionFactor(Constants.toMeters / 60);
 
-
         angleEncoder = turnSparkMAX.getAbsoluteEncoder(Type.kDutyCycle);
         angleEncoder.setInverted(true);
-        //convert to radians and raidans/second
+        // convert to radians and raidans/second
         angleEncoder.setPositionConversionFactor(Constants.toRadians);
         angleEncoder.setVelocityConversionFactor(Constants.toRadians / 60);
 
@@ -63,39 +62,34 @@ public class SwerveModule {
         turnPIDController.setPositionPIDWrappingMinInput(0);
         turnPIDController.setPositionPIDWrappingMaxInput(Constants.toRadians);
 
-        //PID values
-        turnPIDController.setP(0);
-        turnPIDController.setI(0);
-        turnPIDController.setD(0);
+        // PID values
+        turnPIDController.setP(1);
 
-        drivePIDController.setP(0);
-        drivePIDController.setI(0);
-        drivePIDController.setD(0);
+        drivePIDController.setP(1);
 
         this.chassisAngularOffSet = chassisAngularOffSet;
         setState.angle = new Rotation2d(angleEncoder.getPosition());
         distanceEncoder.setPosition(0);
-
     }
 
+    public SwerveModulePosition getPosition() {
+        return new SwerveModulePosition(distanceEncoder.getPosition(),
+                new Rotation2d(angleEncoder.getPosition() - chassisAngularOffSet));
+    }
 
-        public SwerveModulePosition getPosition(){
-            return new SwerveModulePosition(distanceEncoder.getPosition(), new Rotation2d(angleEncoder.getPosition() - chassisAngularOffSet));
-        }
+    public void setDesiredState(SwerveModuleState desiredState) {
+        setState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
+        setState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffSet));
 
-        public void setDesiredState(SwerveModuleState desiredState){
-            setState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
-            setState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffSet));
+        setState = SwerveModuleState.optimize(setState, new Rotation2d(angleEncoder.getPosition()));
 
-            setState = SwerveModuleState.optimize(setState, new Rotation2d(angleEncoder.getPosition()));
+        drivePIDController.setReference(setState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
+        turnPIDController.setReference(setState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
 
-            drivePIDController.setReference(setState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
-            turnPIDController.setReference(setState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
+        setState = desiredState;
+    }
 
-            setState = desiredState;
-        }
-
-        public void resetDistanceEncoder(){
-            distanceEncoder.setPosition(0);
-        }
+    public void resetDistanceEncoder() {
+        distanceEncoder.setPosition(0);
+    }
 }

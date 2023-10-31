@@ -12,7 +12,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Ports;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -36,14 +35,7 @@ public class Drivebase extends SubsystemBase {
   private double prevTime = WPIUtilJNI.now() * 1e-6;
 
   // Odometry class for tracking robot pose
-  SwerveDriveOdometry odometry = new SwerveDriveOdometry(
-      Constants.kDriveKinematics,
-      Rotation2d.fromDegrees(gyro.getAngle()), new SwerveModulePosition[] {
-          frontLeft.getPosition(),
-          backLeft.getPosition(),
-          frontRight.getPosition(),
-          backRight.getPosition()
-      });
+  SwerveDriveOdometry odometry;
 
   /** Creates a new DriveSubsystem. */
   public Drivebase() {
@@ -55,28 +47,34 @@ public class Drivebase extends SubsystemBase {
     frontRight = new SwerveModule(Ports.rightSpeed1, Ports.rightAngle1, 0);
     backRight = new SwerveModule(Ports.rightSpeed2, Ports.rightAngle2, 0);
 
-    // gyro
+    odometry = new SwerveDriveOdometry(
+        Constants.kDriveKinematics,
+        Rotation2d.fromDegrees(gyro.getAngle()), new SwerveModulePosition[] {
+            frontLeft.getPosition(),
+            backLeft.getPosition(),
+            frontRight.getPosition(),
+            backRight.getPosition()
+        });
 
+    // gyro
+    gyro.calibrate();
+    gyro.zeroYaw();
   }
 
   @Override
   public void periodic() {
-    for (SwerveModule module : )
-    SmartDashboard.putNumber(getName(), currentDirection)
     // Update the odometry in the periodic block
     odometry.update(Rotation2d.fromDegrees(gyro.getAngle()),
         new SwerveModulePosition[] { frontLeft.getPosition(), backLeft.getPosition(), frontRight.getPosition(),
             backRight.getPosition() });
   }
 
- 
-  //Returns the currently-estimated pose of the robot
+  // Returns the currently-estimated pose of the robot
   public Pose2d getPose() {
     return odometry.getPoseMeters();
   }
 
-  
-  //Resets the odometry to the specified pose
+  // Resets the odometry to the specified pose
   public void resetOdometry(Pose2d pose) {
     odometry.resetPosition(
         Rotation2d.fromDegrees(gyro.getAngle()),
@@ -155,7 +153,6 @@ public class Drivebase extends SubsystemBase {
     backRight.setDesiredState(swerveModuleStates[3]);
   }
 
- 
   public void lockWheels() {
     frontLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
     backLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
@@ -186,14 +183,12 @@ public class Drivebase extends SubsystemBase {
     gyro.reset();
   }
 
-  
-  //Returns the heading of the robot(=180 to 180)
+  // Returns the heading of the robot(=180 to 180)
   public double getHeading() {
     return Rotation2d.fromDegrees(gyro.getAngle()).getDegrees();
   }
 
-  
-  //Returns the turn rate of the robot
+  // Returns the turn rate of the robot
   public double getTurnRate() {
     return gyro.getRate() * (Constants.kGyroReversed ? -1.0 : 1.0);
   }

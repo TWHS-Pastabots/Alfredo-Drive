@@ -13,6 +13,7 @@ public class Robot extends TimedRobot {
   private static PS4Controller driver;
 
   private static boolean slewRate = false;
+  private static boolean fieldRelative = true;
 
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
@@ -75,11 +76,15 @@ public class Robot extends TimedRobot {
     }
 
     if (driver.getRawButton(Controller.PS_CROSS)) {
+      fieldRelative = !fieldRelative;
+    }
+
+    if (driver.getRawButton(Controller.PS_CROSS)) {
       drivebase.lockWheels();
     }
 
     drivebase.drive(driver.getRawAxis(Controller.PS_AXIS_LEFT_X), driver.getRawAxis(Controller.PS_AXIS_LEFT_Y),
-        driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), true, slewRate);
+        driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), fieldRelative, slewRate);
 
   }
 
