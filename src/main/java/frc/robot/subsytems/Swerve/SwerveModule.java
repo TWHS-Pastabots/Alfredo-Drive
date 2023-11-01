@@ -17,8 +17,8 @@ public class SwerveModule {
     private static CANSparkMax driveSparkMAX;
     private static CANSparkMax turnSparkMAX;
 
-    private static RelativeEncoder distanceEncoder;
-    private static AbsoluteEncoder angleEncoder;
+    private static RelativeEncoder driveEncoder;
+    private static AbsoluteEncoder turnEncoder;
 
     private static SparkMaxPIDController drivePIDController;
     private static SparkMaxPIDController turnPIDController;
@@ -42,22 +42,22 @@ public class SwerveModule {
         turnSparkMAX.setSmartCurrentLimit(15);
         turnSparkMAX.burnFlash();
 
-        distanceEncoder = driveSparkMAX.getEncoder();
+        driveEncoder = driveSparkMAX.getEncoder();
         // convert to meters for positon and meters/second for velocity
-        distanceEncoder.setPositionConversionFactor(Constants.toMeters);
-        distanceEncoder.setVelocityConversionFactor(Constants.toMeters / 60);
+        driveEncoder.setPositionConversionFactor(Constants.toMeters);
+        driveEncoder.setVelocityConversionFactor(Constants.toMeters / 60);
 
-        angleEncoder = turnSparkMAX.getAbsoluteEncoder(Type.kDutyCycle);
-        angleEncoder.setInverted(true);
+        turnEncoder = turnSparkMAX.getAbsoluteEncoder(Type.kDutyCycle);
+        turnEncoder.setInverted(true);
         // convert to radians and raidans/second
-        angleEncoder.setPositionConversionFactor(Constants.toRadians);
-        angleEncoder.setVelocityConversionFactor(Constants.toRadians / 60);
+        turnEncoder.setPositionConversionFactor(Constants.toRadians);
+        turnEncoder.setVelocityConversionFactor(Constants.toRadians / 60);
 
         drivePIDController = driveSparkMAX.getPIDController();
-        drivePIDController.setFeedbackDevice(distanceEncoder);
+        drivePIDController.setFeedbackDevice(driveEncoder);
 
-        turnPIDController = driveSparkMAX.getPIDController();
-        turnPIDController.setFeedbackDevice(angleEncoder);
+        turnPIDController = turnSparkMAX.getPIDController();
+        turnPIDController.setFeedbackDevice(turnEncoder);
         turnPIDController.setPositionPIDWrappingEnabled(true);
         turnPIDController.setPositionPIDWrappingMinInput(0);
         turnPIDController.setPositionPIDWrappingMaxInput(Constants.toRadians);
@@ -68,20 +68,21 @@ public class SwerveModule {
         drivePIDController.setP(1);
 
         this.chassisAngularOffSet = chassisAngularOffSet;
-        setState.angle = new Rotation2d(angleEncoder.getPosition());
-        distanceEncoder.setPosition(0);
+        setState.angle = new Rotation2d(turnEncoder.getPosition());
+        driveEncoder.setPosition(0);
     }
 
     public SwerveModulePosition getPosition() {
-        return new SwerveModulePosition(distanceEncoder.getPosition(),
-                new Rotation2d(angleEncoder.getPosition() - chassisAngularOffSet));
+        System.out.print("Reached: getPostion");
+        return new SwerveModulePosition(driveEncoder.getPosition(),
+                new Rotation2d(turnEncoder.getPosition() - chassisAngularOffSet));
     }
 
     public void setDesiredState(SwerveModuleState desiredState) {
         setState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
         setState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffSet));
 
-        setState = SwerveModuleState.optimize(setState, new Rotation2d(angleEncoder.getPosition()));
+        setState = SwerveModuleState.optimize(setState, new Rotation2d(turnEncoder.getPosition()));
 
         drivePIDController.setReference(setState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
         turnPIDController.setReference(setState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
@@ -90,6 +91,6 @@ public class SwerveModule {
     }
 
     public void resetDistanceEncoder() {
-        distanceEncoder.setPosition(0);
+        driveEncoder.setPosition(0);
     }
 }

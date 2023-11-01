@@ -23,6 +23,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
 
+    System.out.print("Reached: robotInit");
+
     drivebase = Drivebase.getInstance();
 
     driver = new PS4Controller(0);
@@ -35,12 +37,6 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
 
-    double xSpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_X);
-    double ySpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_Y);
-
-    double rot = driver.getRawAxis(Controller.PS_AXIS_RIGHT_X);
-
-    drivebase.drive(xSpeed, ySpeed, rot, true, true);
   }
 
   @Override

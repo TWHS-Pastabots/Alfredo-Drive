@@ -23,8 +23,7 @@ public class Drivebase extends SubsystemBase {
   public static SwerveModule frontRight;
   public static SwerveModule backRight;
 
-  private static final AHRS gyro = new AHRS(SPI.Port.kMXP);
-
+  private static AHRS gyro;
   // Slew rate filter variables for controlling lateral acceleration
   private double currentRotation = 0.0;
   private double currentDirection = 0.0;
@@ -47,6 +46,12 @@ public class Drivebase extends SubsystemBase {
     frontRight = new SwerveModule(Ports.rightSpeed1, Ports.rightAngle1, 0);
     backRight = new SwerveModule(Ports.rightSpeed2, Ports.rightAngle2, 0);
 
+    // gyro
+    gyro = new AHRS(SPI.Port.kMXP);
+
+    gyro.calibrate();
+    gyro.zeroYaw();
+
     odometry = new SwerveDriveOdometry(
         Constants.kDriveKinematics,
         Rotation2d.fromDegrees(gyro.getAngle()), new SwerveModulePosition[] {
@@ -55,10 +60,7 @@ public class Drivebase extends SubsystemBase {
             frontRight.getPosition(),
             backRight.getPosition()
         });
-
-    // gyro
-    gyro.calibrate();
-    gyro.zeroYaw();
+    System.out.print("Reached: end of constructor");
   }
 
   @Override
