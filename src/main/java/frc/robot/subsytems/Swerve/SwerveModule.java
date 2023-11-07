@@ -3,6 +3,7 @@ package frc.robot.subsytems.Swerve;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -17,17 +18,20 @@ public class SwerveModule {
     private static CANSparkMax driveSparkMAX;
     private static CANSparkMax turnSparkMAX;
 
-    private static RelativeEncoder driveEncoder;
-    private static AbsoluteEncoder turnEncoder;
+    private static RelativeEncoder distanceEncoder;
+    private static AbsoluteEncoder angleEncoder;
 
     private static SparkMaxPIDController drivePIDController;
     private static SparkMaxPIDController turnPIDController;
 
     private int chassisAngularOffSet = 0;
+    private int moduleId;
 
-    private SwerveModuleState setState = new SwerveModuleState(0, new Rotation2d());
+    private SwerveModuleState desiredState = new SwerveModuleState(0, new Rotation2d());
 
     public SwerveModule(int speedSparkID, int angleSparkID, int chassisAngularOffSet) {
+
+        moduleId = speedSparkID;
 
         driveSparkMAX = new CANSparkMax(speedSparkID, MotorType.kBrushless);
 
@@ -42,55 +46,69 @@ public class SwerveModule {
         turnSparkMAX.setSmartCurrentLimit(15);
         turnSparkMAX.burnFlash();
 
-        driveEncoder = driveSparkMAX.getEncoder();
+        distanceEncoder = driveSparkMAX.getEncoder();
         // convert to meters for positon and meters/second for velocity
-        driveEncoder.setPositionConversionFactor(Constants.toMeters);
-        driveEncoder.setVelocityConversionFactor(Constants.toMeters / 60);
+        distanceEncoder.setPositionConversionFactor(Constants.toMeters);
+        distanceEncoder.setVelocityConversionFactor(Constants.toMeters / 60);
 
-        turnEncoder = turnSparkMAX.getAbsoluteEncoder(Type.kDutyCycle);
-        turnEncoder.setInverted(true);
+        angleEncoder = turnSparkMAX.getAbsoluteEncoder(Type.kDutyCycle);
+        angleEncoder.setInverted(true);
         // convert to radians and raidans/second
-        turnEncoder.setPositionConversionFactor(Constants.toRadians);
-        turnEncoder.setVelocityConversionFactor(Constants.toRadians / 60);
+        angleEncoder.setPositionConversionFactor(Constants.toRadians);
+        angleEncoder.setVelocityConversionFactor(Constants.toRadians / 60);
 
         drivePIDController = driveSparkMAX.getPIDController();
-        drivePIDController.setFeedbackDevice(driveEncoder);
+        drivePIDController.setFeedbackDevice(distanceEncoder);
 
         turnPIDController = turnSparkMAX.getPIDController();
-        turnPIDController.setFeedbackDevice(turnEncoder);
+        turnPIDController.setFeedbackDevice(angleEncoder);
         turnPIDController.setPositionPIDWrappingEnabled(true);
         turnPIDController.setPositionPIDWrappingMinInput(0);
         turnPIDController.setPositionPIDWrappingMaxInput(Constants.toRadians);
 
-        // PID values
-        turnPIDController.setP(1);
-
         drivePIDController.setP(1);
+        drivePIDController.setI(0);
+        drivePIDController.setD(0);
+
+        turnPIDController.setP(1);
+        turnPIDController.setI(0);
+        turnPIDController.setD(0);
 
         this.chassisAngularOffSet = chassisAngularOffSet;
-        setState.angle = new Rotation2d(turnEncoder.getPosition());
-        driveEncoder.setPosition(0);
+        desiredState.angle = new Rotation2d(angleEncoder.getPosition());
+        distanceEncoder.setPosition(0);
+
     }
 
     public SwerveModulePosition getPosition() {
-        System.out.print("Reached: getPostion");
-        return new SwerveModulePosition(driveEncoder.getPosition(),
-                new Rotation2d(turnEncoder.getPosition() - chassisAngularOffSet));
+        return new SwerveModulePosition(distanceEncoder.getPosition(),
+                new Rotation2d(angleEncoder.getPosition() - chassisAngularOffSet));
+    }
+
+    public void log(String key, double value) {
+        SmartDashboard.putNumber(String.format("(%d) %s", moduleId, key), value);
+    }
+
+    public void log(String key, String value) {
+        SmartDashboard.putString(String.format("(%d) %s", moduleId, key), value);
     }
 
     public void setDesiredState(SwerveModuleState desiredState) {
-        setState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
-        setState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffSet));
+        log("Desired State", desiredState.toString());
+        SwerveModuleState correctedDesiredState = new SwerveModuleState();
+        correctedDesiredState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
+        correctedDesiredState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffSet));
 
-        setState = SwerveModuleState.optimize(setState, new Rotation2d(turnEncoder.getPosition()));
+        SwerveModuleState optimizedDesiredState = SwerveModuleState.optimize(correctedDesiredState,
+                new Rotation2d(angleEncoder.getPosition()));
 
-        drivePIDController.setReference(setState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
-        turnPIDController.setReference(setState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
+        drivePIDController.setReference(optimizedDesiredState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
+        turnPIDController.setReference(optimizedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
 
-        setState = desiredState;
+        this.desiredState = desiredState;
     }
 
     public void resetDistanceEncoder() {
-        driveEncoder.setPosition(0);
+        distanceEncoder.setPosition(0);
     }
 }
