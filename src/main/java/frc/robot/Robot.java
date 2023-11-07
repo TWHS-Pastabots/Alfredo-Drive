@@ -13,17 +13,7 @@ public class Robot extends TimedRobot {
 
   private Drivebase drivebase;
 
-  private static PS4Controller driver;
-
-  private static CANSparkMax leftFrontTurnSparkMax;
-  private static CANSparkMax leftFrontDriveSparkMax;
-  private static CANSparkMax leftBackTurnSparkMax;
-  private static CANSparkMax leftBackDriveSparkMax;
-
-  private static CANSparkMax rightFrontTurnSparkMax;
-  private static CANSparkMax rightFrontDriveSparkMax;
-  private static CANSparkMax rightBackTurnSparkMax;
-  private static CANSparkMax rightBackDriveSparkMax;
+  private static TorqueLogiPro driver;
 
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
@@ -33,28 +23,10 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
 
-    // drivebase = Drivebase.getInstance();
+    drivebase = Drivebase.getInstance();
 
-    driver = new PS4Controller(0);
-    leftFrontTurnSparkMax = new CANSparkMax(Ports.leftAngle1,
-        MotorType.kBrushless);
-    leftFrontDriveSparkMax = new CANSparkMax(Ports.leftSpeed1,
-        MotorType.kBrushless);
-
-    leftBackTurnSparkMax = new CANSparkMax(Ports.leftAngle2,
-        MotorType.kBrushless);
-    leftBackDriveSparkMax = new CANSparkMax(Ports.leftSpeed2,
-        MotorType.kBrushless);
-
-    rightFrontTurnSparkMax = new CANSparkMax(Ports.rightAngle1,
-        MotorType.kBrushless);
-    rightFrontDriveSparkMax = new CANSparkMax(Ports.rightSpeed1,
-        MotorType.kBrushless);
-
-    rightBackTurnSparkMax = new CANSparkMax(Ports.rightAngle2,
-        MotorType.kBrushless);
-    rightBackDriveSparkMax = new CANSparkMax(Ports.rightSpeed2,
-        MotorType.kBrushless);
+    // driver = new PS4Controller(0);
+    driver = new TorqueLogiPro(0);
 
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
@@ -67,25 +39,16 @@ public class Robot extends TimedRobot {
     // double xSpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_X);
     // double ySpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_Y);
 
-    // double slant =
-    // Math.sqrt(Math.pow(driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), 2) +
-    // Math.pow(driver.getRawAxis(Controller.PS_AXIS_RIGHT_Y), 2));
+    // double rot = driver.getRawAxis(Controller.PS_AXIS_RIGHT_X);
 
-    // double rot = slant;
+    double xSpeed = -driver.getRoll();
+    double ySpeed = -driver.getPitch();
+    double rot = driver.getYaw();
+    if (Math.abs(rot) < .1)
+      rot = 0;
 
-    leftFrontDriveSparkMax.set(.5);
-    leftFrontTurnSparkMax.set(.5);
+    drivebase.drive(xSpeed, ySpeed, rot, true);
 
-    leftBackDriveSparkMax.set(.5);
-    leftBackTurnSparkMax.set(.5);
-
-    rightFrontDriveSparkMax.set(.5);
-    rightFrontTurnSparkMax.set(.5);
-
-    rightBackDriveSparkMax.set(.5);
-    rightBackTurnSparkMax.set(.5);
-
-    // drivebase.drive(xSpeed, ySpeed, rot, true, true);
   }
 
   @Override
