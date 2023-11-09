@@ -1,21 +1,20 @@
 package frc.robot;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
-import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsytems.Swerve.Drivebase;
+import frc.robot.auton.*;
 
 public class Robot extends TimedRobot {
 
   private Drivebase drivebase;
 
+  private DriveTest driveTest;
+
   private static TorqueLogiPro driver;
 
-  private static final String kDefaultAuto = "Default";
+  private static final String kDefaultAuto = "DriveTest";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
@@ -35,24 +34,28 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
+    double ySpeed = -driver.getRoll();
+    double xSpeed = -driver.getPitch();
+    double rot = 0;
 
-    // double xSpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_X);
-    // double ySpeed = driver.getRawAxis(Controller.PS_AXIS_LEFT_Y);
+    if (driver.getTrigger()) {
+      rot = driver.getYaw();
+    }
 
-    // double rot = driver.getRawAxis(Controller.PS_AXIS_RIGHT_X);
+    if (driver.getButtonByIndex(7)) {
+      drivebase.lockWheels();
+    } else {
+      drivebase.drive(xSpeed, ySpeed, rot, true);
+    }
 
-    double xSpeed = -driver.getRoll();
-    double ySpeed = -driver.getPitch();
-    double rot = driver.getYaw();
-    if (Math.abs(rot) < .1)
-      rot = 0;
-
-    drivebase.drive(xSpeed, ySpeed, rot, true);
-
+    drivebase.periodic();
   }
 
   @Override
   public void autonomousInit() {
+
+    driveTest = new DriveTest();
+
     m_autoSelected = m_chooser.getSelected();
     m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
@@ -67,7 +70,7 @@ public class Robot extends TimedRobot {
         break;
       case kDefaultAuto:
       default:
-        // Put default auto code here
+        driveTest.execute();
         break;
     }
   }
