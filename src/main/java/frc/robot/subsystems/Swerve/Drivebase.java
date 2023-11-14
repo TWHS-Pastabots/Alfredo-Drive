@@ -1,7 +1,8 @@
-package frc.robot.subsytems.Swerve;
+package frc.robot.subsystems.Swerve;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.commands.FollowPathHolonomic;
+import com.pathplanner.lib.commands.FollowPathWithEvents;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
@@ -97,6 +98,14 @@ public class Drivebase extends SubsystemBase {
         pose);
   }
 
+  public void resetOdometry() {
+    odometry.resetPosition(
+        Rotation2d.fromDegrees(-gyro.getAngle()),
+        new SwerveModulePosition[] { frontLeft.getPosition(), backLeft.getPosition(), frontRight.getPosition(),
+            backRight.getPosition() },
+        getPose());
+  }
+
   public void drive(double forward, double side, double rot, boolean fieldRelative) {
 
     double xSpeedCommanded;
@@ -136,11 +145,12 @@ public class Drivebase extends SubsystemBase {
     return speeds;
   }
 
-  public Command getCommand(String pathNme) {
+  public Command getCommand(String pathName) {
     PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
 
-    return new FollowPathHolonomic(path, this::getPose, this::resetOdometry, this::getChassisSpeeds,
-        this::setChassisSpeed, config, this);
+    return new FollowPathWithEvents(
+        new FollowPathHolonomic(path, this::getPose, this::getRobotRelativeSpeeds, this::setChassisSpeed, config, this),
+        path, this::getPose);
   }
 
   public void lockWheels() {

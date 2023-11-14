@@ -15,4 +15,9 @@ public class Ports {
     public static final int leftAngle2 = 3;
     public static final int rightAngle1 = 5;
     public static final int rightAngle2 = 7;
+
+    //arm & intake sparkmaxes
+    public static final int upperArm = 0;
+    public static final int lowerArm = 0;
+    public static final int intake = 0;
 }

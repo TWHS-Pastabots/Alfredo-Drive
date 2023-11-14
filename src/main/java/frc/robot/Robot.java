@@ -1,18 +1,30 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsytems.Swerve.Drivebase;
+import frc.robot.subsystems.*;
+import frc.robot.subsystems.Arm.ArmControlSpeed;
+import frc.robot.subsystems.Arm.ArmControlState;
+import frc.robot.subsystems.Arm.ArmState;
+import frc.robot.subsystems.Swerve.Drivebase;
 import frc.robot.auton.*;
 
 public class Robot extends TimedRobot {
 
   private Drivebase drivebase;
+  private Intake intake;
+  private Arm arm;
 
   private DriveTest driveTest;
 
   private static TorqueLogiPro driver;
+  private static XboxController operator;
+
+  private boolean outtake;
+  private boolean cycle;
+  private boolean manual;
 
   private static final String kDefaultAuto = "DriveTest";
   private static final String kCustomAuto = "My Auto";
@@ -23,9 +35,11 @@ public class Robot extends TimedRobot {
   public void robotInit() {
 
     drivebase = Drivebase.getInstance();
+    intake = Intake.getInstance();
+    arm = Arm.getInstance();
 
-    // driver = new PS4Controller(0);
     driver = new TorqueLogiPro(0);
+    operator = new XboxController(1);
 
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
@@ -34,21 +48,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-    double ySpeed = -driver.getRoll();
-    double xSpeed = -driver.getPitch();
-    double rot = 0;
-
-    if (driver.getTrigger()) {
-      rot = driver.getYaw();
-    }
-
-    if (driver.getButtonByIndex(7)) {
-      drivebase.lockWheels();
-    } else {
-      drivebase.drive(xSpeed, ySpeed, rot, true);
-    }
-
+  
     drivebase.periodic();
+    SmartDashboard.putBoolean("Arm Manual:", manual);
   }
 
   @Override
@@ -82,9 +84,76 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
 
-    // drivebase.drive(driver.getRawAxis(Controller.PS_AXIS_LEFT_X),
-    // driver.getRawAxis(Controller.PS_AXIS_LEFT_Y),
-    // driver.getRawAxis(Controller.PS_AXIS_RIGHT_X), true, false);
+    /* Drive Controls */
+    double ySpeed = -driver.getRoll();
+    double xSpeed = -driver.getPitch();
+    double rot = 0;
+
+    if (driver.getTrigger()) {
+      rot = driver.getYaw();
+    }
+
+    if (driver.getButtonByIndex(7)) {
+      drivebase.lockWheels();
+    } else {
+      drivebase.drive(xSpeed, ySpeed, rot, true);
+    }
+
+    /* Arm Controls */
+
+    // finer control when holding L1
+    if (operator.getRawButton(Controller.XBOX_LB)) {
+      arm.setControlSpeed(ArmControlSpeed.FINE);
+    } else {
+      arm.setControlSpeed(ArmControlSpeed.FULL);
+    }
+
+    // manage arm control states
+    if (driver.getRawButton(1)) {
+      if (arm.controlState == ArmControlState.MANUAL) {
+        arm.setControlState(ArmControlState.PID);
+        manual = false;
+      } else {
+        arm.setControlState(ArmControlState.MANUAL);
+        manual = true;
+      }
+    }
+
+    // manage arm PID states & update
+    // the logic for whether or not the PID/manual mode actually runs is in
+    // Arm.java
+
+    if (operator.getRawButton(Controller.XBOX_X)) {
+      arm.setState(ArmState.EXTENDED);
+    } else if (operator.getRawButton(Controller.XBOX_Y)) {
+      arm.setState(ArmState.GROUND_INTAKE);
+    } else if (operator.getRawButton(Controller.XBOX_LB)) {
+      arm.setState(ArmState.RETRACTED);
+    } else if (operator.getRawButtonPressed(Controller.XBOX_RB)) {
+      if (cycle) {
+        arm.setState(ArmState.MID);
+        cycle = false;
+      } else {
+        arm.setState(ArmState.LOW);
+        cycle = true;
+      }
+    }
+
+    arm.update(operator.getRawAxis(Controller.PS_AXIS_RIGHT_Y) * .5,
+        operator.getRawAxis(Controller.PS_AXIS_LEFT_Y) * .5);
+
+    if (arm.state != ArmState.RETRACTED) {
+      outtake = operator.getRawButton(Controller.XBOX_A);
+    } else {
+      outtake = false;
+    }
+    boolean intakeButton = operator.getRawButton(Controller.XBOX_B);
+    intake.update(outtake, intakeButton);
+
+    /* Drive Controls */
+
+    // slow driving while holding left bumper, fast while holding right bumper
+    arm.update(0, 0);
 
   }
 
