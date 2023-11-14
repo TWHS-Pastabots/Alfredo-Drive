@@ -22,4 +22,13 @@ public final class Controller {
     public static final int PS_AXIS_RIGHT_Y = 5;
     public static final int PS_AXIS_L2 = 3;
     public static final int PS_AXIS_R2 = 4;
+
+    /* XBox */
+    public static final int XBOX_A = 1;
+    public static final int XBOX_B = 2;
+    public static final int XBOX_X = 3;
+    public static final int XBOX_Y = 4;
+    public static final int XBOX_LB = 5;
+    public static final int XBOX_RB = 6;
+    public static final int XBOX_SHARE = 7;
 }

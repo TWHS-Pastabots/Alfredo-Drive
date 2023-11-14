@@ -4,12 +4,13 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsystems.*;
+import frc.robot.subsytems.*;
 import frc.robot.subsystems.Arm.ArmControlSpeed;
 import frc.robot.subsystems.Arm.ArmControlState;
 import frc.robot.subsystems.Arm.ArmState;
 import frc.robot.subsystems.Swerve.Drivebase;
-import frc.robot.auton.*;
+import frc.robot.subsystems.*;
+import frc.robot.TorqueLogiPro;
 
 public class Robot extends TimedRobot {
 
@@ -17,7 +18,7 @@ public class Robot extends TimedRobot {
   private Intake intake;
   private Arm arm;
 
-  private DriveTest driveTest;
+  // private DriveTest driveTest;
 
   private static TorqueLogiPro driver;
   private static XboxController operator;
@@ -48,7 +49,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-  
+
     drivebase.periodic();
     SmartDashboard.putBoolean("Arm Manual:", manual);
   }
@@ -56,7 +57,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
 
-    driveTest = new DriveTest();
+    // driveTest = new DriveTest();
 
     m_autoSelected = m_chooser.getSelected();
     m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
@@ -72,7 +73,7 @@ public class Robot extends TimedRobot {
         break;
       case kDefaultAuto:
       default:
-        driveTest.execute();
+        // driveTest.execute();
         break;
     }
   }
