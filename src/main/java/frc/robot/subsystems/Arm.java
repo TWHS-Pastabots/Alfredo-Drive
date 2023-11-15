@@ -17,6 +17,7 @@ public class Arm {
     private ArmControlSpeed controlSpeed = ArmControlSpeed.FULL;
 
     private PIDController armPID = new PIDController(0.6, 0.05, 0.1);
+    private PIDController lowerArmPID = new PIDController(.4, 0.0, 0.0);
 
     private CANSparkMax armController;
     private CANSparkMax lowArmController;
@@ -71,26 +72,40 @@ public class Arm {
     }
 
     public void update(double lowerPower, double upperPower) {
-            double reqPower = armPID.calculate(armController.getEncoder().getPosition(), state.poseU);
+        SmartDashboard.putNumber("ARM POSITION", armController.getEncoder().getPosition());
+        SmartDashboard.putNumber("LOWER ARM POSITION", lowArmController.getEncoder().getPosition());
+        SmartDashboard.putNumber("ARM POSITION REQUESTED", state.poseU);
+        SmartDashboard.putNumber("LOWER ARM POSITION REQUESTED", state.poseL);
+        SmartDashboard.putString("Arm State", state.toString());
 
-            reqPower = MathUtil.clamp(reqPower, -state.volts, state.volts);
+        if (controlState == ArmControlState.MANUAL) {
+            armController.set(upperPower * controlSpeed.speed);
+            lowArmController.set(lowerPower * controlSpeed.speed);
+        } else if (controlState == ArmControlState.PID) {
+            double reqPowerUpper = armPID.calculate(armController.getEncoder().getPosition(), state.poseU);
+            double reqPowerLower = lowerArmPID.calculate(lowArmController.getEncoder().getPosition(), state.poseL);
+
+            reqPowerUpper = MathUtil.clamp(reqPowerUpper, -state.volts, state.volts);
+            reqPowerLower = MathUtil.clamp(reqPowerLower, -state.volts, state.volts);
+
+            SmartDashboard.putNumber("Upper Arm Volts", reqPowerUpper);
+            SmartDashboard.putNumber("Lower Arm Volts", reqPowerLower);
 
             // pid order
             if (state.lowerFirst) {
                 if (hasLowerReachedTargetPose(2)) {
-                    lowArmController.setVoltage(reqPower);
-
+                    armController.setVoltage(reqPowerUpper);
                 }
-                armController.setVoltage(reqPower);
+                lowArmController.setVoltage(reqPowerLower);
             } else {
                 if (hasUpperReachedTargetPose(2)) {
-                    armController.setVoltage(reqPower);
+                    lowArmController.setVoltage(reqPowerLower);
                 }
-                lowArmController.setVoltage(reqPower);
-
+                armController.setVoltage(reqPowerUpper);
             }
         }
 
+    }
 
     public void setState(ArmState state) {
         this.state = state;
@@ -115,6 +130,18 @@ public class Arm {
     public boolean hasReachedTargetPose(double tolerance) {
         return hasLowerReachedTargetPose(tolerance) && hasUpperReachedTargetPose(tolerance);
     }
+
+    public boolean hasReachedTargetPose() {
+        return hasLowerReachedTargetPose(0) && hasUpperReachedTargetPose(0);
+    }
+
+    public double getLowerPosition() {
+       return lowArmController.getEncoder().getPosition();
+    }
+
+    public double getUpperPosition() {
+        return armController.getEncoder().getPosition();
+     }
 
     public static Arm getInstance() {
         if (instance == null) {
