@@ -1,6 +1,11 @@
 package frc.robot.subsystems.Swerve;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.ReplanningConfig;
+import com.pathplanner.lib.commands.*;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -24,7 +29,7 @@ public class Drivebase extends SubsystemBase {
   public SwerveModule frontRight;
   public SwerveModule backRight;
 
-  // private HolonomicPathFollowerConfig config;
+  private HolonomicPathFollowerConfig config;
   private ChassisSpeeds speeds;
 
   private static AHRS gyro;
@@ -48,6 +53,7 @@ public class Drivebase extends SubsystemBase {
     gyro = new AHRS(SPI.Port.kMXP);
 
     gyro.calibrate();
+    gyro.setAngleAdjustment(90);
     gyro.zeroYaw();
 
     odometry = new SwerveDriveOdometry(
@@ -59,11 +65,11 @@ public class Drivebase extends SubsystemBase {
             backRight.getPosition()
         });
 
-    // config = new HolonomicPathFollowerConfig(new PIDConstants(1, 0, 0),
-    // new PIDConstants(1, 0, 0),
-    // 2, Math.sqrt(Math.pow(DriveConstants.kTrackWidth / 2, 2) +
-    // Math.pow(DriveConstants.kWheelBase / 2, 2)),
-    // new ReplanningConfig());
+    config = new HolonomicPathFollowerConfig(new PIDConstants(1, 0, 0),
+    new PIDConstants(1, 0, 0),
+    2, Math.sqrt(Math.pow(DriveConstants.kTrackWidth / 2, 2) +
+    Math.pow(DriveConstants.kWheelBase / 2, 2)),
+    new ReplanningConfig());
 
   }
 
@@ -140,14 +146,14 @@ public class Drivebase extends SubsystemBase {
     return speeds;
   }
 
-  // public Command getCommand(String pathName) {
-  // PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+  public Command getCommand(String pathName) {
+  PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
 
-  // return new FollowPathWithEvents(
-  // new FollowPathHolonomic(path, this::getPose, this::getRobotRelativeSpeeds,
-  // this::setChassisSpeed, config, this),
-  // path, this::getPose);
-  // }
+  return new FollowPathWithEvents(
+  new FollowPathHolonomic(path, this::getPose, this::getRobotRelativeSpeeds,
+  this::setChassisSpeed, config, this),
+  path, this::getPose);
+  }
 
   public void lockWheels() {
     frontLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));

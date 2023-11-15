@@ -4,13 +4,12 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsytems.*;
+import frc.robot.auton.ArmCommand;
+import frc.robot.subsystems.*;
 import frc.robot.subsystems.Arm.ArmControlSpeed;
 import frc.robot.subsystems.Arm.ArmControlState;
 import frc.robot.subsystems.Arm.ArmState;
 import frc.robot.subsystems.Swerve.Drivebase;
-import frc.robot.subsystems.*;
-import frc.robot.TorqueLogiPro;
 
 public class Robot extends TimedRobot {
 
@@ -18,7 +17,7 @@ public class Robot extends TimedRobot {
   private Intake intake;
   private Arm arm;
 
-  // private DriveTest driveTest;
+private ArmCommand armCommand;
 
   private static TorqueLogiPro driver;
   private static XboxController operator;
@@ -27,7 +26,7 @@ public class Robot extends TimedRobot {
   private boolean cycle;
   private boolean manual;
 
-  private static final String kDefaultAuto = "DriveTest";
+  private static final String kArmCommand = "ArmCommand";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
@@ -42,25 +41,28 @@ public class Robot extends TimedRobot {
     driver = new TorqueLogiPro(0);
     operator = new XboxController(1);
 
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
+    m_chooser.setDefaultOption("ArmCommand", kArmCommand);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
   }
 
   @Override
   public void robotPeriodic() {
-
     drivebase.periodic();
+    arm.update(0, 0);
+
     SmartDashboard.putBoolean("Arm Manual:", manual);
   }
 
   @Override
   public void autonomousInit() {
 
-    // driveTest = new DriveTest();
+    armCommand = new ArmCommand();
+
+    armCommand.initialize();
 
     m_autoSelected = m_chooser.getSelected();
-    m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
+    m_autoSelected = SmartDashboard.getString("Auto Selector", kArmCommand);
     System.out.println("Auto selected: " + m_autoSelected);
   }
 
@@ -71,9 +73,9 @@ public class Robot extends TimedRobot {
       case kCustomAuto:
         // Put custom auto code here
         break;
-      case kDefaultAuto:
+      case kArmCommand:
       default:
-        // driveTest.execute();
+        armCommand.execute();
         break;
     }
   }
