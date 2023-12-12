@@ -4,7 +4,8 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.auton.ArmCommand;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.auton.DriveTest;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.Arm.ArmControlSpeed;
 import frc.robot.subsystems.Arm.ArmControlState;
@@ -17,8 +18,6 @@ public class Robot extends TimedRobot {
   private Intake intake;
   private Arm arm;
 
-private ArmCommand armCommand;
-
   private static TorqueLogiPro driver;
   private static XboxController operator;
 
@@ -26,8 +25,11 @@ private ArmCommand armCommand;
   private boolean cycle;
   private boolean manual;
 
-  private static final String kArmCommand = "ArmCommand";
-  private static final String kCustomAuto = "My Auto";
+  private DriveTest driveTest;
+  private Command driveCommand;
+
+  private static final String kDefaultAuto = "DriveTest";
+  private static final String kCustomAuto = "DriveCommand";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
@@ -41,7 +43,7 @@ private ArmCommand armCommand;
     driver = new TorqueLogiPro(0);
     operator = new XboxController(1);
 
-    m_chooser.setDefaultOption("ArmCommand", kArmCommand);
+    m_chooser.setDefaultOption("ArmCommand", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
   }
@@ -57,12 +59,15 @@ private ArmCommand armCommand;
   @Override
   public void autonomousInit() {
 
-    armCommand = new ArmCommand();
+    driveTest = new DriveTest();
+    driveCommand = drivebase.getCommand("Test");
 
-    armCommand.initialize();
+
+    driveCommand.initialize();
+    driveTest.initialize();
 
     m_autoSelected = m_chooser.getSelected();
-    m_autoSelected = SmartDashboard.getString("Auto Selector", kArmCommand);
+    m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
   }
 
@@ -71,11 +76,11 @@ private ArmCommand armCommand;
   public void autonomousPeriodic() {
     switch (m_autoSelected) {
       case kCustomAuto:
-        // Put custom auto code here
+        driveCommand.execute();
         break;
-      case kArmCommand:
+      case kDefaultAuto:
       default:
-        armCommand.execute();
+        driveTest.execute();
         break;
     }
   }
@@ -123,8 +128,6 @@ private ArmCommand armCommand;
     }
 
     // manage arm PID states & update
-    // the logic for whether or not the PID/manual mode actually runs is in
-    // Arm.java
 
     if (operator.getRawButton(Controller.XBOX_X)) {
       arm.setState(ArmState.EXTENDED);

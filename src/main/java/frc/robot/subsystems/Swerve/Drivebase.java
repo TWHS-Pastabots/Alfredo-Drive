@@ -78,6 +78,7 @@ public class Drivebase extends SubsystemBase {
     SmartDashboard.putNumber("Gyro Angle:", Math.toRadians(gyro.getAngle()));
     SmartDashboard.putNumber("X-coordinate", getPose().getX());
     SmartDashboard.putNumber("Y-coordinate", getPose().getY());
+
     // Update the odometry in the periodic block
     odometry.update(Rotation2d.fromDegrees(-gyro.getAngle()),
         new SwerveModulePosition[] { frontLeft.getPosition(), backLeft.getPosition(), frontRight.getPosition(),
@@ -121,12 +122,12 @@ public class Drivebase extends SubsystemBase {
     double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond;
     double rotDelivered = currentRotation * DriveConstants.kMaxAngularSpeed;
 
-    var speeds = fieldRelative
+    var chassisspeeds = fieldRelative
         ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
             Rotation2d.fromDegrees(-gyro.getAngle()))
         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered);
 
-    setChassisSpeed(speeds);
+    setChassisSpeed(chassisspeeds);
   }
 
   public void setChassisSpeed(ChassisSpeeds input) {
