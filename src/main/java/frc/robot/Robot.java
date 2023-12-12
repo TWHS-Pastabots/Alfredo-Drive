@@ -25,11 +25,9 @@ public class Robot extends TimedRobot {
   private boolean cycle;
   private boolean manual;
 
-  private DriveTest driveTest;
   private Command driveCommand;
 
-  private static final String kDefaultAuto = "DriveTest";
-  private static final String kCustomAuto = "DriveCommand";
+  private static final String kDefaultAuto = "DriveCommand";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
@@ -43,8 +41,7 @@ public class Robot extends TimedRobot {
     driver = new TorqueLogiPro(0);
     operator = new XboxController(1);
 
-    m_chooser.setDefaultOption("ArmCommand", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
+    m_chooser.addOption("Drive Command", kDefaultAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
   }
 
@@ -59,12 +56,9 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
 
-    driveTest = new DriveTest();
     driveCommand = drivebase.getCommand("Test");
 
-
     driveCommand.initialize();
-    driveTest.initialize();
 
     m_autoSelected = m_chooser.getSelected();
     m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
@@ -75,12 +69,9 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousPeriodic() {
     switch (m_autoSelected) {
-      case kCustomAuto:
-        driveCommand.execute();
-        break;
       case kDefaultAuto:
       default:
-        driveTest.execute();
+        driveCommand.execute();
         break;
     }
   }
