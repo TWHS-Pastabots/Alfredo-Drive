@@ -17,6 +17,7 @@ public class Robot extends TimedRobot {
   private Drivebase drivebase;
   private Intake intake;
   private Arm arm;
+  private VisionTablesListener visionTables;
 
   private static TorqueLogiPro driver;
   private static XboxController operator;
@@ -24,6 +25,8 @@ public class Robot extends TimedRobot {
   private boolean outtake;
   private boolean cycle;
   private boolean manual;
+
+  
 
   private Command driveCommand;
 
@@ -33,10 +36,10 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-
     drivebase = Drivebase.getInstance();
     intake = Intake.getInstance();
     arm = Arm.getInstance();
+    visionTables = VisionTablesListener.getInstance();
 
     driver = new TorqueLogiPro(0);
     operator = new XboxController(1);
@@ -51,6 +54,7 @@ public class Robot extends TimedRobot {
     arm.update(0, 0);
 
     SmartDashboard.putBoolean("Arm Manual:", manual);
+    visionTables.putInfoOnDashboard();
   }
 
   @Override
@@ -63,6 +67,7 @@ public class Robot extends TimedRobot {
     m_autoSelected = m_chooser.getSelected();
     m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
+    visionTables.putInfoOnDashboard();
   }
 
   /** This function is called periodically during autonomous. */
@@ -151,7 +156,7 @@ public class Robot extends TimedRobot {
 
     // slow driving while holding left bumper, fast while holding right bumper
     arm.update(0, 0);
-
+    visionTables.putInfoOnDashboard();
   }
 
   @Override
