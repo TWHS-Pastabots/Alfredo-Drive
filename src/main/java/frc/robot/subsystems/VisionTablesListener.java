@@ -16,7 +16,7 @@ public class VisionTablesListener {
     private IntegerArraySubscriber xEulerSub;
     private IntegerArraySubscriber yEulerSub;
     private IntegerArraySubscriber zEulerSub;
-    
+
     public VisionTablesListener() {
         networkTable = NetworkTableInstance.getDefault();
         visionTable = networkTable.getTable("Vision");
@@ -35,23 +35,24 @@ public class VisionTablesListener {
         SmartDashboard.putNumberArray("X Euler Angles", convertArray(xEulerSub.get()));
         SmartDashboard.putNumberArray("Y Euler Angles", convertArray(yEulerSub.get()));
         SmartDashboard.putNumberArray("Z Euler Angles", convertArray(zEulerSub.get()));
+        SmartDashboard.putNumber("Ansh", 0);
     }
 
-    //need to convert each value to double individually, can't typecast entire array
+    // need to convert each value to double individually, can't typecast entire
+    // array
     private double[] convertArray(long[] arr) {
         double[] newArr = new double[arr.length];
-    
-        for(int i = 0; i < arr.length; i++) {
-            newArr[i] = (double)arr[i];
+
+        for (int i = 0; i < arr.length; i++) {
+            newArr[i] = (double) arr[i];
         }
         return newArr;
     }
 
     public static VisionTablesListener getInstance() {
-        if(instance == null)
+        if (instance == null)
             instance = new VisionTablesListener();
         return instance;
     }
 
-    
 }

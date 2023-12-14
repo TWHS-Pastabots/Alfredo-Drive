@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.auton.DriveTest;
+// import frc.robot.auton.DriveTest;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.Arm.ArmControlSpeed;
 import frc.robot.subsystems.Arm.ArmControlState;
@@ -26,9 +26,7 @@ public class Robot extends TimedRobot {
   private boolean cycle;
   private boolean manual;
 
-  
-
-  private Command driveCommand;
+  // private Command driveCommand;
 
   private static final String kDefaultAuto = "DriveCommand";
   private String m_autoSelected;
@@ -60,9 +58,9 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
 
-    driveCommand = drivebase.getCommand("Test");
+    // driveCommand = drivebase.getCommand("Test");
 
-    driveCommand.initialize();
+    // driveCommand.initialize();
 
     m_autoSelected = m_chooser.getSelected();
     m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
@@ -73,12 +71,12 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kDefaultAuto:
-      default:
-        driveCommand.execute();
-        break;
-    }
+    // switch (m_autoSelected) {
+    // case kDefaultAuto:
+    // default:
+    // driveCommand.execute();
+    // break;
+    // }
   }
 
   @Override
